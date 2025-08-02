@@ -10,6 +10,7 @@ const Clock = () => {
     setMounted(true); // Set mounted to true after initial client render
     const timerId = setInterval(() => {
       setTime(new Date());
+       console.log('Current Time:', now.toLocaleString());
     }, 1000);
 
     return () => clearInterval(timerId);

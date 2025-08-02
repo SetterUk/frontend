@@ -6,6 +6,9 @@ import WatchtowerBackground from './components/WatchtowerBackground';
 import Batman3D from './components/Batman3D';
 import Aquaman3D from './components/Aquaman3D';
 import Flash3D from './components/Flash3D';
+import Superman3D from './components/Superman3D';
+import Wonderwoman3D from './components/WonderWoman3D';
+
 
 import CurrentWeatherPanel from './components/CurrentWeatherPanel';
 import WeatherDetailsPanel from './components/WeatherDetailsPanel';
@@ -49,26 +52,41 @@ export default function Home() {
       timeOfDay: timeOfDay,
       windSpeed: windSpeed
     });
-    
-    // Aquaman for water-related weather (highest priority)
-    if (conditionLower.includes('rain') || conditionLower.includes('drizzle') || 
-        conditionLower.includes('shower') || conditionLower.includes('storm')) {
-      console.log('Selected Hero: Aquaman (water weather)');
-      return 'aquaman';
-    }
-    
-    // Flash for windy conditions (second priority)
-    if (conditionLower.includes('wind') || (windSpeed && windSpeed > 25)) {
-      console.log('Selected Hero: Flash (windy conditions) - Wind speed:', windSpeed);
-      return 'flash';
-    }
-    
-    // Batman for night or clear conditions (lowest priority)
-    if (timeOfDay === 'night' || conditionLower.includes('clear') || 
-        conditionLower.includes('cloud') || conditionLower.includes('fog')) {
-      console.log('Selected Hero: Batman (night/clear weather)');
-      return 'batman';
-    }
+// Aquaman for water-related weather (highest priority)
+if (conditionLower.includes('rain') || conditionLower.includes('drizzle') || 
+    conditionLower.includes('shower') || conditionLower.includes('storm')) {
+  console.log('Selected Hero: Aquaman (water weather)');
+  return 'aquaman';
+}
+
+// Flash for windy conditions (second priority)
+if (conditionLower.includes('wind') || (windSpeed && windSpeed > 25)) {
+  console.log('Selected Hero: Flash (windy conditions) - Wind speed:', windSpeed);
+  return 'flash';
+}
+
+// Wonder Woman for dawn or dusk (light-based hero)
+if (
+  timeOfDay === 'day' &&
+  (conditionLower.includes('overcast') || conditionLower.includes('partly cloud')||conditionLower.includes('cloud') || conditionLower.includes('fog'))
+) {
+  console.log('Selected Hero: Wonder Woman (pleasant day)');
+  return 'wonderwoman';
+}
+
+
+// Superman for clear weather during the day
+if (timeOfDay === 'day' && conditionLower.includes('clear')) {
+  console.log('Selected Hero: Superman (daytime & clear weather)');
+  return 'superman';
+}
+
+// Batman for night or clear/cloudy conditions (fallback/default)
+if (timeOfDay === 'night' && conditionLower.includes('clear') ) {
+  console.log('Selected Hero: Batman (night/clear/cloudy)');
+  return 'batman';
+}
+
     
     // Default to Batman
     console.log('Selected Hero: Batman (default)');
@@ -235,19 +253,15 @@ export default function Home() {
   };
 
   const updateTimeAndWeather = (time, condition) => {
-    // Handle time
-    if (time) {
-      const hour = new Date(time).getHours();
-      if (hour >= 5 && hour < 12) {
-        setTimeOfDay('dawn');
-      } else if (hour >= 12 && hour < 18) {
-        setTimeOfDay('day');
-      } else if (hour >= 18 && hour < 21) {
-        setTimeOfDay('dusk');
-      } else {
-        setTimeOfDay('night');
-      }
+  // Handle time
+  if (time) {
+    const hour = new Date(time).getHours();
+    if (hour >= 6 && hour < 18) {
+      setTimeOfDay('day');
+    } else {
+      setTimeOfDay('night');
     }
+  }
 
     // Handle condition with null check
     if (condition && typeof condition === 'string') {
@@ -462,19 +476,25 @@ export default function Home() {
           </div>
         </main>
       </div>
+        {/* 3D Canvas for Heroes */}
+<div className="absolute inset-0 z-0">
+  {currentHero === 'aquaman' && (
+    <Aquaman3D key="aquaman" timeOfDay={timeOfDay} weatherCondition={weatherCondition} />
+  )}
+  {currentHero === 'flash' && (
+    <Flash3D key="flash" timeOfDay={timeOfDay} weatherCondition={weatherCondition} />
+  )}
+  {currentHero === 'superman' && (
+    <Superman3D key="superman" timeOfDay={timeOfDay} weatherCondition={weatherCondition} />
+  )}
+  {currentHero === 'wonderwoman' && (
+    <Wonderwoman3D key="wonderwoman" timeOfDay={timeOfDay} weatherCondition={weatherCondition} />
+  )}
+  {(currentHero === 'batman' || !currentHero) && (
+    <Batman3D key="batman" timeOfDay={timeOfDay} weatherCondition={weatherCondition} />
+  )}
+</div>
 
-              {/* 3D Canvas for Heroes */}
-        <div className="absolute inset-0 z-0">
-          {currentHero === 'aquaman' && (
-            <Aquaman3D key="aquaman" timeOfDay={timeOfDay} weatherCondition={weatherCondition} />
-          )}
-          {currentHero === 'flash' && (
-            <Flash3D key="flash" timeOfDay={timeOfDay} weatherCondition={weatherCondition} />
-          )}
-          {(currentHero === 'batman' || !currentHero) && (
-            <Batman3D key="batman" timeOfDay={timeOfDay} weatherCondition={weatherCondition} />
-          )}
-        </div>
     </div>
   );
 }
