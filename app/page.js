@@ -6,9 +6,12 @@ import WatchtowerBackground from './components/WatchtowerBackground';
 import Batman3D from './components/Batman3D';
 import Aquaman3D from './components/Aquaman3D';
 import Flash3D from './components/Flash3D';
+import Superman3D from './components/Superman3D';
+import Wonderwoman3D from './components/WonderWoman3D';
+
 
 import CurrentWeatherPanel from './components/CurrentWeatherPanel';
-import WeatherDetailsPanel from './components/WeatherDetailsPanel';
+import ChatInterface from './components/ChatInterface';
 import LocationManager from './components/LocationManager';
 import JusticeLeagueBootLoader from './components/JusticeLeagueBootLoader';
 import * as THREE from 'three';
@@ -49,24 +52,39 @@ export default function Home() {
       timeOfDay: timeOfDay,
       windSpeed: windSpeed
     });
-    
+
     // Aquaman for water-related weather (highest priority)
     if (conditionLower.includes('rain') || conditionLower.includes('drizzle') || 
         conditionLower.includes('shower') || conditionLower.includes('storm')) {
       console.log('Selected Hero: Aquaman (water weather)');
       return 'aquaman';
     }
-    
+
     // Flash for windy conditions (second priority)
     if (conditionLower.includes('wind') || (windSpeed && windSpeed > 25)) {
       console.log('Selected Hero: Flash (windy conditions) - Wind speed:', windSpeed);
       return 'flash';
     }
-    
-    // Batman for night or clear conditions (lowest priority)
-    if (timeOfDay === 'night' || conditionLower.includes('clear') || 
-        conditionLower.includes('cloud') || conditionLower.includes('fog')) {
-      console.log('Selected Hero: Batman (night/clear weather)');
+
+    // Superman for clear weather during day, dawn, or dusk
+    if ((timeOfDay === 'day' || timeOfDay === 'dawn' || timeOfDay === 'dusk') && conditionLower.includes('clear')) {
+      console.log('Selected Hero: Superman (day/dawn/dusk & clear weather)');
+      return 'superman';
+    }
+
+    // Wonder Woman for cloudy conditions during day, dawn, or dusk (no rain)
+    if ((timeOfDay === 'day' || timeOfDay === 'dawn' || timeOfDay === 'dusk') && 
+        (conditionLower.includes('overcast') || conditionLower.includes('partly cloud') || 
+         conditionLower.includes('cloud') || conditionLower.includes('fog')) &&
+        !conditionLower.includes('rain') && !conditionLower.includes('drizzle') && 
+        !conditionLower.includes('shower') && !conditionLower.includes('storm')) {
+      console.log('Selected Hero: Wonder Woman (cloudy conditions during day/dawn/dusk, no rain)');
+      return 'wonderwoman';
+    }
+
+    // Batman for night conditions (default for night)
+    if (timeOfDay === 'night') {
+      console.log('Selected Hero: Batman (night time)');
       return 'batman';
     }
     
@@ -235,15 +253,15 @@ export default function Home() {
   };
 
   const updateTimeAndWeather = (time, condition) => {
-    // Handle time
+    // Handle time with more granular periods
     if (time) {
       const hour = new Date(time).getHours();
-      if (hour >= 5 && hour < 12) {
-        setTimeOfDay('dawn');
-      } else if (hour >= 12 && hour < 18) {
+      if (hour >= 6 && hour < 18) {
         setTimeOfDay('day');
-      } else if (hour >= 18 && hour < 21) {
-        setTimeOfDay('dusk');
+      } else if (hour >= 5 && hour < 6) {
+        setTimeOfDay('dawn'); // Dawn period
+      } else if (hour >= 18 && hour < 19) {
+        setTimeOfDay('dusk'); // Dusk period
       } else {
         setTimeOfDay('night');
       }
@@ -334,6 +352,11 @@ export default function Home() {
                 Current: {dashboardData.location.name}
               </span>
             )}
+            {currentHero && (
+              <span className="text-yellow-400 text-sm font-semibold">
+                Hero: {currentHero.charAt(0).toUpperCase() + currentHero.slice(1)}
+              </span>
+            )}
           </div>
         </header>
 
@@ -362,7 +385,7 @@ export default function Home() {
                 />
                 {dashboardData.hero && dashboardData.hero.dialogue && (
                   <div className="mt-4 p-3 bg-black/60 rounded text-yellow-300 font-mono text-sm border-l-4 border-yellow-500 shadow-inner">
-                    <span className="font-bold">Batman says:</span>
+                    <span className="font-bold">{dashboardData.hero.name} says:</span>
                     <br />
                     <span className="italic">{dashboardData.hero.dialogue}</span>
                   </div>
@@ -408,51 +431,13 @@ export default function Home() {
             )}
           </div>
 
-          {/* Transparent Weather Details Block (Center-Left) */}
-          <div className="absolute right-8 bottom-8 bg-white/20 backdrop-blur-md rounded-lg p-6 shadow-lg min-w-[220px] max-w-xs z-20 flex flex-col items-center">
-            {dashboardData ? (
-              <>
-                <div className="text-lg font-semibold mb-3 text-yellow-400">Weather Details</div>
-                <div className="space-y-2 text-sm w-full">
-                  <div className="flex justify-between">
-                    <span>Temperature:</span>
-                    <span className="font-bold">{dashboardData.currentWeather.temperature}°C</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Feels Like:</span>
-                    <span className="font-bold">{dashboardData.currentWeather.feelsLike || dashboardData.currentWeather.temperature}°C</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Wind Speed:</span>
-                    <span className="font-bold">{dashboardData.currentWeather.wind_kph || dashboardData.currentWeather.windSpeed || 'N/A'} km/h</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Humidity:</span>
-                    <span className="font-bold">{dashboardData.currentWeather.humidity || 'N/A'}%</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Pressure:</span>
-                    <span className="font-bold">{dashboardData.currentWeather.pressure ? Math.round(dashboardData.currentWeather.pressure) : 'N/A'} hPa</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Precipitation:</span>
-                    <span className="font-bold">{dashboardData.currentWeather.precipitation !== undefined ? `${dashboardData.currentWeather.precipitation} mm` : 'N/A'}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Cloud Cover:</span>
-                    <span className="font-bold">{dashboardData.currentWeather.cloudCover !== undefined ? `${dashboardData.currentWeather.cloudCover}%` : 'N/A'}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Condition:</span>
-                    <span className="font-bold capitalize">{dashboardData.currentWeather.condition || 'N/A'}</span>
-                  </div>
-                </div>
-              </>
-            ) : (
-              <div className="text-center text-gray-300">
-                <p className="text-sm">Weather details unavailable</p>
-              </div>
-            )}
+          {/* Chat Interface Block (Center-Left) */}
+          <div className="absolute right-8 bottom-8 w-96 h-96 z-20">
+            <ChatInterface 
+              currentHero={currentHero}
+              weatherData={dashboardData?.currentWeather}
+              locationData={dashboardData?.location}
+            />
           </div>
 
           {/* Transparent Time Block (Right) */}
@@ -462,19 +447,25 @@ export default function Home() {
           </div>
         </main>
       </div>
+        {/* 3D Canvas for Heroes */}
+<div className="absolute inset-0 z-[5] pointer-events-auto flex items-center justify-center">
+  {currentHero === 'aquaman' && (
+    <Aquaman3D key="aquaman" timeOfDay={timeOfDay} weatherCondition={weatherCondition} />
+  )}
+  {currentHero === 'flash' && (
+    <Flash3D key="flash" timeOfDay={timeOfDay} weatherCondition={weatherCondition} />
+  )}
+  {currentHero === 'superman' && (
+    <Superman3D key="superman" timeOfDay={timeOfDay} weatherCondition={weatherCondition} />
+  )}
+  {currentHero === 'wonderwoman' && (
+    <Wonderwoman3D key="wonderwoman" timeOfDay={timeOfDay} weatherCondition={weatherCondition} />
+  )}
+  {(currentHero === 'batman' || !currentHero) && (
+    <Batman3D key="batman" timeOfDay={timeOfDay} weatherCondition={weatherCondition} />
+  )}
+</div>
 
-              {/* 3D Canvas for Heroes */}
-        <div className="absolute inset-0 z-0">
-          {currentHero === 'aquaman' && (
-            <Aquaman3D key="aquaman" timeOfDay={timeOfDay} weatherCondition={weatherCondition} />
-          )}
-          {currentHero === 'flash' && (
-            <Flash3D key="flash" timeOfDay={timeOfDay} weatherCondition={weatherCondition} />
-          )}
-          {(currentHero === 'batman' || !currentHero) && (
-            <Batman3D key="batman" timeOfDay={timeOfDay} weatherCondition={weatherCondition} />
-          )}
-        </div>
     </div>
   );
 }

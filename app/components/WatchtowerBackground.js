@@ -2,8 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import Batman3D from './Batman3D';
-import BatmanSilhouette from './BatmanSilhouette';
 
 const WatchtowerBackground = ({ weather, location, currentHero }) => {
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -31,9 +29,11 @@ const WatchtowerBackground = ({ weather, location, currentHero }) => {
   // Calculate time of day based on current time
   const getTimeOfDay = () => {
     const hour = currentTime.getHours();
-    if (hour >= 5 && hour < 12) return 'morning';
+    if (hour >= 5 && hour < 6) return 'dawn';
+    if (hour >= 6 && hour < 12) return 'morning';
     if (hour >= 12 && hour < 17) return 'afternoon';
-    if (hour >= 17 && hour < 20) return 'evening';
+    if (hour >= 17 && hour < 18) return 'dusk';
+    if (hour >= 18 && hour < 20) return 'evening';
     return 'night';
   };
 
@@ -91,8 +91,10 @@ const WatchtowerBackground = ({ weather, location, currentHero }) => {
 
   // Sky gradient colors based on time of day
   const skyGradients = {
+    dawn: 'from-purple-600 via-pink-400 to-orange-300',
     morning: 'from-orange-300 via-yellow-200 to-blue-300',
     afternoon: 'from-blue-400 via-blue-300 to-blue-200',
+    dusk: 'from-orange-400 via-pink-500 to-purple-600',
     evening: 'from-purple-500 via-pink-400 to-orange-300',
     night: 'from-indigo-900 via-purple-900 to-black'
   };
@@ -401,17 +403,7 @@ const WatchtowerBackground = ({ weather, location, currentHero }) => {
         </motion.div>
       )}
 
-      {/* Batman 3D Model - Try to load FBX, fallback to silhouette */}
-      {isClient && currentHero === 'batman' && (
-        <>
-          {/* Use 3D model for desktop and silhouette for mobile */}
-          {!isMobile ? (
-            <Batman3D timeOfDay={timeOfDay} weatherCondition={weatherCondition} />
-          ) : (
-            <BatmanSilhouette timeOfDay={timeOfDay} weatherCondition={weatherCondition} />
-          )}
-        </>
-      )}
+
     </div>
   );
 };
